@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QuizMaster - Test Your Knowledge</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        /* BLACK & WHITE THEME */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #000 0%, #444 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            color: #fff;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+            width: 100%;
+            max-width: 800px;
+            padding: 40px;
+            transition: all 0.3s ease;
+            color: #fff;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .logo {
+            background: linear-gradient(45deg, #fff, #aaa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #ccc;
+            font-size: 1.1rem;
+        }
+
+        .quiz-section {
+            display: none;
+        }
+
+        .quiz-section.active {
+            display: block;
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .question-counter {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #ddd;
+            font-size: 0.9rem;
+        }
+
+        .progress-bar {
+            height: 6px;
+            background: #333;
+            border-radius: 3px;
+            margin-bottom: 30px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: #fff;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .question {
+            background: #222;
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 25px;
+            border-left: 5px solid #fff;
+        }
+
+        .question h3 {
+            color: #fff;
+            font-size: 1.3rem;
+            line-height: 1.5;
+            margin-bottom: 20px;
+        }
+
+        .options {
+            display: grid;
+            gap: 12px;
+        }
+
+        .option {
+            background: #111;
+            border: 2px solid #444;
+            border-radius: 12px;
+            padding: 15px 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: #fff;
+        }
+
+        .option:hover {
+            border-color: #fff;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 255, 255, 0.2);
+        }
+
+        .option.selected {
+            border-color: #fff;
+            background: #333;
+        }
+
+        .option.correct {
+            border-color: #00ff00;
+            background: rgba(0, 255, 0, 0.1);
+        }
+
+        .option.incorrect {
+            border-color: #ff4444;
+            background: rgba(255, 0, 0, 0.1);
+        }
+
+        .feedback {
+            margin: 20px 0;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            font-weight: bold;
+            display: none;
+        }
+
+        .feedback.correct {
+            background: rgba(0, 255, 0, 0.1);
+            color: #00ff00;
+            border: 2px solid #00ff00;
+        }
+
+        .feedback.incorrect {
+            background: rgba(255, 0, 0, 0.1);
+            color: #ff4444;
+            border: 2px solid #ff4444;
+        }
+
+        .buttons {
+            text-align: center;
+            margin-top: 30px;
+        }
+
+        .btn {
+            background: #fff;
+            color: #000;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(255, 255, 255, 0.4);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .start-screen h2,
+        .results-message {
+            color: #fff;
+        }
+
+        .score-circle {
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            margin: 30px auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            font-size: 2rem;
+            font-weight: bold;
+            color: #000;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .score-circle.excellent {
+            background: #00ff00;
+        }
+
+        .score-circle.good {
+            background: #bbbbbb;
+        }
+
+        .score-circle.average {
+            background: #888;
+        }
+
+        .score-circle.poor {
+            background: #555;
+        }
+
+        .results-breakdown {
+            background: #111;
+            border-radius: 15px;
+            padding: 25px;
+            margin: 20px 0;
+            color: #fff;
+        }
+
+        .breakdown-item strong {
+            color: #fff;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">🧠 Gensyn Codeassist Quiz for Windows Users 🧠</div>
+            <div class="subtitle">Test Your Knowledge Created by Shahil</div>
+        </div>
+
+        <!-- Start Screen -->
+        <div id="start-screen" class="quiz-section active start-screen">
+            <h2>Welcome to QuizMaster!</h2>
+            <p>Test your knowledge with our interactive quiz.</p>
+            <div class="buttons">
+                <button class="btn" onclick="startQuiz()">Start Quiz</button>
+            </div>
+        </div>
+
+        <!-- Quiz Screen -->
+        <div id="quiz-screen" class="quiz-section">
+            <div class="question-counter">
+                <span id="current-question">1</span> of <span id="total-questions">12</span>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progress-fill"></div>
+            </div>
+
+            <div class="question">
+                <h3 id="question-text"></h3>
+                <div class="options" id="options-container"></div>
+            </div>
+
+            <div class="feedback" id="feedback"></div>
+
+            <div class="buttons">
+                <button class="btn" id="next-btn" onclick="nextQuestion()" disabled>Next Question</button>
+            </div>
+        </div>
+
+        <!-- Results Screen -->
+        <div id="results-screen" class="quiz-section results-screen">
+            <h2>Quiz Complete!</h2>
+
+            <div class="score-circle" id="score-circle">
+                <div id="score-percentage">0%</div>
+                <div class="score-text">Score</div>
+            </div>
+
+            <div class="results-message" id="results-message"></div>
+
+            <div class="results-breakdown">
+                <div class="breakdown-item"><span>Correct Answers:</span> <strong id="correct-count">0</strong></div>
+                <div class="breakdown-item"><span>Incorrect Answers:</span> <strong id="incorrect-count">0</strong></div>
+                <div class="breakdown-item"><span>Total Questions:</span> <strong id="total-count">0</strong></div>
+            </div>
+
+            <div class="buttons">
+                <button class="btn" onclick="restartQuiz()">Take Quiz Again</button>
+            </div>
+        </div>
+    </div>
+
+<script>
+
+const quizData = [
+    { question:"What is the minimum RAM requirement for running CodeAssist?", options:["4 GB","8 GB","12 GB","24 GB"], correct:2 },
+    { question:"Which version of Python is required (minimum) for CodeAssist?", options:["Python 2.7","Python 3.8","Python 3.9","Python 3.10+"], correct:3 },
+    { question:"Which account is required to upload trained models after using CodeAssist?", options:["GitHub","Hugging Face (Write token)","AWS","Google Cloud"], correct:1 },
+    { question:"On the Windows (WSL 2) guide, what must you ensure before launching CodeAssist?", options:["No other terminal open","Port 3000 is free","Disable antivirus","Login to Microsoft Store"], correct:1 },
+    { question:"Which command starts the CodeAssist environment after cloning?", options:["npm start","python run.py","uv run run.py","docker run codeassist"], correct:2 },
+    { question:"What is the default URL for CodeAssist if it doesn't auto-open?", options:["http://localhost:8080","http://127.0.0.1:5000","http://localhost:3000","http://localhost:8000"], correct:2 },
+    { question:"Recommended Linux distribution for running CodeAssist natively?", options:["Ubuntu 18.04","Fedora 35","Ubuntu 22.04+","Debian 10"], correct:2 },
+    { question:"In CodeAssist training, what happens if you leave generated code untouched?", options:["Negative reward","Positive reward","No reward","Episode fails"], correct:1 },
+    { question:"Which tool handles Python dependencies in CodeAssist setup?", options:["virtualenv","Poetry","UV","Pipenv"], correct:2 },
+    { question:"Which OS is NOT listed in supported platforms?", options:["Windows (WSL2)","Linux (Ubuntu 22.04+)","macOS","Android"], correct:3 },
+    { question:"In WSL2 guide, what privilege is required before installing CodeAssist?", options:["Standard","Administrator","Guest","Root via SSH"], correct:1 },
+    { question:"What happens when you press Ctrl + C where CodeAssist is running?", options:["Unpauses assistant","Ends episode & triggers training","Logs you out","Resets model"], correct:1 }
+];
+
+let currentQuestion = 0;
+let score = 0;
+let selectedOption = -1;
+
+function startQuiz() {
+    document.getElementById('start-screen').classList.remove('active');
+    document.getElementById('quiz-screen').classList.add('active');
+    document.getElementById('total-questions').textContent = quizData.length;
+    loadQuestion();
+}
+
+function loadQuestion() {
+    if (currentQuestion >= quizData.length) return showResults();
+
+    const q = quizData[currentQuestion];
+    document.getElementById('current-question').textContent = currentQuestion+1;
+    document.getElementById('question-text').textContent = q.question;
+
+    const optBox = document.getElementById('options-container');
+    optBox.innerHTML = "";
+
+    q.options.forEach((op, i) => {
+        const el = document.createElement('div');
+        el.className = "option";
+        el.textContent = op;
+        el.onclick = () => selectOption(i);
+        optBox.appendChild(el);
+    });
+
+    document.getElementById('progress-fill').style.width =
+        (currentQuestion / quizData.length) * 100 + "%";
+
+    selectedOption = -1;
+    document.getElementById('next-btn').disabled = true;
+
+    const fb = document.getElementById('feedback');
+    fb.style.display = "none";
+    fb.className = "feedback";
+}
+
+function selectOption(i) {
+    if (selectedOption !== -1) return;
+
+    selectedOption = i;
+    const options = document.querySelectorAll(".option");
+    const q = quizData[currentQuestion];
+
+    options.forEach((op, idx) => {
+        if (idx === q.correct) op.classList.add("correct");
+        else if (idx === i) op.classList.add("incorrect");
+        op.style.pointerEvents = "none";
+    });
+
+    const fb = document.getElementById('feedback');
+    if (i === q.correct) {
+        score++;
+        fb.textContent = "✔ Correct!";
+        fb.classList.add("correct");
+    } else {
+        fb.textContent = "✖ Incorrect! Correct answer: " + q.options[q.correct];
+        fb.classList.add("incorrect");
+    }
+    fb.style.display = "block";
+
+    document.getElementById('next-btn').disabled = false;
+}
+
+function nextQuestion() {
+    currentQuestion++;
+    loadQuestion();
+}
+
+function showResults() {
+    document.getElementById('quiz-screen').classList.remove('active');
+    document.getElementById('results-screen').classList.add('active');
+
+    const percent = Math.round((score / quizData.length) * 100);
+    document.getElementById("score-percentage").textContent = percent + "%";
+    document.getElementById("correct-count").textContent = score;
+    document.getElementById("incorrect-count").textContent = quizData.length - score;
+    document.getElementById("total-count").textContent = quizData.length;
+
+    const circle = document.getElementById("score-circle");
+    if (percent >= 80) circle.className = "score-circle excellent";
+    else if (percent >= 60) circle.className = "score-circle good";
+    else if (percent >= 40) circle.className = "score-circle average";
+    else circle.className = "score-circle poor";
+
+    document.getElementById("results-message").textContent =
+        percent >= 80 ? "🔥 Excellent!"
+        : percent >= 60 ? "👏 Good job!"
+        : percent >= 40 ? "🙂 Not bad!"
+        : "💪 Keep practicing!";
+}
+
+function restartQuiz() {
+    currentQuestion = 0;
+    score = 0;
+    document.getElementById('results-screen').classList.remove('active');
+    document.getElementById('start-screen').classList.add('active');
+}
+
+</script>
+</body>
+</html>
